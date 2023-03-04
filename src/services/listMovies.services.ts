@@ -5,36 +5,24 @@ import { Movie } from "../entities";
 import {
   IMoviesQuery,
   IMoviesResponsePaginated,
+  MoviesSort,
 } from "../interfaces/movies.interfaces";
 import { multipleMovieRsponseSchema } from "../schemas/movies.schemas";
 
-const listMoviesService = async (
-  query: IMoviesQuery
-): Promise<IMoviesResponsePaginated> => {
-  let page = query.page === null || undefined ? 1 : Number(query.page);
-  let perPage = query.perPage === null || undefined ? 5 : Number(query.perPage);
-
-  let sort = query.sort === null || undefined ? "id" : query.sort;
-  if (sort === "id" || sort === "price" || sort === "duration") {
-  } else {
-    sort = "id";
+const listMoviesService = async ({
+  order = 'asc',
+  page = 1,
+  perPage = 5,
+  sort = MoviesSort.ID,
+}: IMoviesQuery): Promise<IMoviesResponsePaginated> => {
+  if (sort === MoviesSort.ID) {
+    order = 'asc';
   }
 
-  let order;
-  if (sort !== "id") {
-    order = query.order === null || undefined ? "asc" : query.order;
-    if (order === "asc" || order === "desc") {
-    } else {
-      order = "asc";
-    }
-  } else {
-    order = "asc";
-  }
-
-  if (perPage! > 5 || perPage! < 1 || !Number.isInteger(perPage)) {
+  if (Number(perPage) > 5 || Number(perPage) < 1 || !Number.isInteger(perPage)) {
     perPage = 5;
   }
-  if (page! < 1 || !Number.isInteger(page)) {
+  if (Number(page) < 1 || !Number.isInteger(page)) {
     page = 1;
   }
 
@@ -49,7 +37,7 @@ const listMoviesService = async (
 
   const findMovies = await moviesRepository.find({
     take: perPage,
-    skip: perPage * page - perPage,
+    skip: Number(perPage) * Number(page) - Number(perPage),
     order: sortby,
   });
   const movies = multipleMovieRsponseSchema.parse(findMovies);
@@ -57,30 +45,28 @@ const listMoviesService = async (
   const previousPage =
     page === 1
       ? null
-      : `http://localhost:3000/movies?page=${page - 1}&perPage=${perPage}`;
+      : `http://localhost:3000/movies?page=${Number(page) - 1}&perPage=${perPage}`;
 
   const allMoviesLength = allMovies.length;
   let nextPageExists;
-  allMoviesLength % perPage === 0
-    ? (nextPageExists = allMoviesLength / perPage)
-    : (nextPageExists = Math.trunc(allMoviesLength / perPage) + 1);
+  allMoviesLength % Number(perPage) === 0
+    ? (nextPageExists = allMoviesLength / Number(perPage))
+    : (nextPageExists = Math.trunc(allMoviesLength / Number(perPage)) + 1);
 
   let nextPage;
-  if (page + 1 > nextPageExists) {
+  if (Number(page) + 1 > nextPageExists) {
     nextPage = null;
   } else {
     nextPage = `http://localhost:3000/movies?page=${
-      page + 1
+      Number(page) + 1
     }&perPage=${perPage}`;
   }
 
-  const returnMovies = {
+  return {
     prevPage: previousPage,
     nextPage: nextPage,
     count: allMoviesLength,
     data: movies,
   };
-
-  return returnMovies;
 };
 export { listMoviesService };

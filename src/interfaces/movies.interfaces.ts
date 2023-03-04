@@ -17,12 +17,19 @@ interface IMoviesResponsePaginated {
   count: number;
   data: IMultipleMoviesResponse;
 }
+
+enum MoviesSort {
+  ID = 'id',
+  PRICE = 'price',
+  DURATION = 'duration'
+}
 interface IMoviesQuery {
-  page?: string;
-  perPage?: string;
-  sort?: string;
+  page?: string | Number;
+  perPage?: string | Number;
+  sort?: MoviesSort;
   order?: string;
 }
+
 export {
   IMovieResponse,
   IMovierequest,
@@ -30,4 +37,5 @@ export {
   IMovieUpdateRequest,
   IMoviesResponsePaginated,
   IMoviesQuery,
+  MoviesSort
 };
